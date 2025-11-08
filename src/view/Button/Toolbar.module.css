@@ -1,0 +1,12 @@
+.toolbar {
+  display: flex;
+  background: white;
+  padding: 4px 6px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.workspaceToolbar {
+  height: auto;
+}

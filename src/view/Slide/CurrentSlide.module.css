@@ -1,0 +1,11 @@
+.currentSlide {
+  width: 960px;
+  height: 510px;
+  position: relative;
+  margin: 10px;
+  border-radius: 4px;
+  background: white;
+}
+
+
+

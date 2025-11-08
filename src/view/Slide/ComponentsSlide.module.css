@@ -1,0 +1,44 @@
+.textElement {
+  cursor: pointer;
+  padding: 8px;
+  word-break: break-word;
+  background: transparent;
+  border: none;
+  resize: none;
+  outline: none;
+}
+
+.textElement:hover {
+  border: 2px dashed #1a73e8 ;
+}
+
+.textElement.active {
+  border: 2px dashed #1a73e8;
+}
+
+.textElement.dragging {
+  opacity: 0.8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100000;
+}
+
+.imageElement {
+  cursor: pointer;
+  object-fit: cover;
+  border: 2px dashed transparent;
+}
+
+.imageElement:hover {
+  border: 2px dashed #1a73e8;
+}
+
+.imageElement.active {
+  border: 2px dashed #1a73e8;
+}
+
+.imageElement.dragging {
+  opacity: 0.8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 2px dashed #1a73e8;
+  z-index: 100000;
+}

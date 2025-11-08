@@ -1,0 +1,21 @@
+.mainContent {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: #f8f9fa;
+  height: 80vh;
+}
+
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+
+.slideArea {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
