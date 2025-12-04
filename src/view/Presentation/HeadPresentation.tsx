@@ -1,19 +1,18 @@
-import type { Presentation } from "../../types/presentationTypes";
 import styles from "./headPresentation.module.css";
 import { MyButton } from "../Button/Buttons";
-import { dispatch } from "../../editor";
-import { renamePresentation } from "../../utils/function/functionPresentation";
+import { useAppSelector, useAppDispatch } from '../../utils/hooks/redux';
+import { changePresentationTitle } from "../../store/action-creators"; 
 
 type HeaderPresentationProps = {
-  presentation: Presentation;
   onSave: () => void;
 };
 
 function HeaderPresentation(props: HeaderPresentationProps) {
+  const dispatch = useAppDispatch();
+  const title = useAppSelector((state) => state.title);
 
   const changeTitle = (newTitle: string) => {
-    dispatch(renamePresentation, newTitle);
-    console.log("Новое название презентации:", newTitle);
+    dispatch(changePresentationTitle(newTitle));
   };
 
   const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +32,7 @@ function HeaderPresentation(props: HeaderPresentationProps) {
         <input
           type="text"
           className={styles.presentationTitle}
-          defaultValue={props.presentation.title}
+          defaultValue={title}
           onBlur={handleBlur}
           onKeyDown={handleKeyPress}
           placeholder="Название презентации"

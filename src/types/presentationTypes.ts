@@ -29,18 +29,18 @@ type TextElement = DefaultObj & {
 };
 
 type Position = {
-  x: string;
-  y: string;
+  x: number;
+  y: number;
 };
 
 type Size = {
-  width: string;
-  height: string;
+  width: number;
+  height: number;
 };
 
 type FontStyle = {
   fontFamily: string;
-  fontSize: string;
+  fontSize: number;
   fontWeight: string;
   fontStyle: string;
   color: Color;

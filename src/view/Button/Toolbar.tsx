@@ -1,15 +1,15 @@
 import stylesToolBar from "./toolbar.module.css";
 import stylesButton from "./buttons.module.css";
 import { MyButton } from "./Buttons";
-import type { Presentation } from "../../types/presentationTypes";
-import { handleToolbarAction } from "../../utils/function/functionToolbar";
+import { useToolbarActions } from "../../utils/function/functionToolbar";
 
 type ToolbarProps = {
-  presentation: Presentation;
   mode?: "main" | "workspace" | "slidesPanel";
 };
 
 function Toolbar(props: ToolbarProps) {
+  const handleToolbarAction = useToolbarActions();
+
   const toolbarConfig = {
     main: [
       { text: "Файл", action: "file" },
@@ -45,7 +45,7 @@ function Toolbar(props: ToolbarProps) {
         props.mode === "slidesPanel" ? (
           <MyButton
             key={item.text}
-            onClick={() => handleToolbarAction(item.action, props.presentation)}
+            onClick={() => handleToolbarAction(item.action)}
           >
             {item.text}
           </MyButton>
@@ -53,7 +53,7 @@ function Toolbar(props: ToolbarProps) {
           <MyButton
             key={item.text}
             text={item.text}
-            onClick={() => handleToolbarAction(item.action, props.presentation)}
+            onClick={() => handleToolbarAction(item.action)}
           />
         )
       )}

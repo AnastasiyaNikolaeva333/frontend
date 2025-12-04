@@ -1,69 +1,11 @@
-import type { Color } from "../../types/presentationTypes";
-import { dispatch } from "../../editor"; 
-import { updateSlideBackground } from "./functionSlide";
-import { createImageElement } from "./functionElementsSlide";
+import type { Color, Background } from "../../types/presentationTypes";
+import { useAppDispatch, useAppSelector } from '../../utils/hooks/redux';
+import { updateSlideBackground } from '../../store/action-creators/slides';
+import { createImageElement } from './functionCreateElements'; 
 
-
-function handleChangeBackground() {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    `;
-
-    const content = document.createElement('div');
-    content.style.cssText = `
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        min-width: 200px;
-    `;
-
-    content.innerHTML = `
-        <h3 style="margin: 0 0 10px 0;">Выберите тип фона</h3>
-        <button id="color-btn">Сплошной цвет</button>
-        <button id="gradient-btn">Градиент</button>
-        <button id="image-btn">Изображение</button>
-        <button id="cancel-btn">Отмена</button>
-    `;
-
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-
-    document.getElementById('color-btn')!.onclick = () => {
-        document.body.removeChild(modal);
-        showColorPicker();
-    };
-
-    document.getElementById('gradient-btn')!.onclick = () => {
-        document.body.removeChild(modal);
-        showGradientPicker();
-    };
-
-    document.getElementById('image-btn')!.onclick = () => {
-        document.body.removeChild(modal);
-        createImageElement()
-            .then((imageElement) => {
-                dispatch(updateSlideBackground, { type: "picture", src: imageElement.src });
-            });
-    };
-
-    document.getElementById('cancel-btn')!.onclick = () => {
-        document.body.removeChild(modal);
-    };
-}
-
-function showColorPicker() {
+function showColorPicker(dispatch: any, slideId: string | null) {
+    if (!slideId) return;
+    
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
     colorInput.value = '#ffffff';
@@ -72,7 +14,11 @@ function showColorPicker() {
     colorInput.onchange = (e) => {
         const target = e.target as HTMLInputElement;
         if (target.value) {
-            dispatch(updateSlideBackground, { type: "color", color: target.value });
+            const background: Background = { 
+                type: "color", 
+                color: target.value 
+            };
+            dispatch(updateSlideBackground(slideId, background));
         }
         document.body.removeChild(colorInput);
     };
@@ -85,7 +31,9 @@ function showColorPicker() {
     colorInput.click();
 }
 
-function showGradientPicker() {
+function showGradientPicker(dispatch: any, slideId: string | null) {
+    if (!slideId) return;
+    
     const modal = document.createElement('div');
     modal.style.cssText = `
         position: fixed;
@@ -110,7 +58,7 @@ function showGradientPicker() {
         min-width: 300px;
     `;
 
-    const colors: string[] = ['#ffff', '#ffff'];
+    const colors: string[] = ['#ffffff', '#ffffff'];
     let colorElements: HTMLElement[] = [];
 
     const updatePreview = () => {
@@ -152,7 +100,7 @@ function showGradientPicker() {
             const removeBtn = document.createElement('button');
             removeBtn.textContent = '×';
             removeBtn.style.cssText = `
-                background: #ffff;
+                background: #ff4444;
                 color: white;
                 border: none;
                 border-radius: 50%;
@@ -231,14 +179,16 @@ function showGradientPicker() {
         }
 
         const gradientColors: Color[] = colors.map(color => ({
-            type: "color" as const,
+            type: "color",
             color: color
         }));
 
-        dispatch(updateSlideBackground, {
+        const background: Background = {
             type: "gradient",
             colors: gradientColors
-        });
+        };
+        
+        dispatch(updateSlideBackground(slideId, background));
         document.body.removeChild(modal);
     };
 
@@ -270,6 +220,75 @@ function showSingleColorPicker(currentColor: string = '#ffffff'): Promise<string
     });
 }
 
-export {
-    handleChangeBackground,
+export function useBackgroundActions() {
+  const dispatch = useAppDispatch();
+  const selected = useAppSelector((state) => state.selected);
+
+  const handleChangeBackground = () => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 200px;
+    `;
+
+    content.innerHTML = `
+        <h3 style="margin: 0 0 10px 0;">Выберите тип фона</h3>
+        <button id="color-btn">Сплошной цвет</button>
+        <button id="gradient-btn">Градиент</button>
+        <button id="image-btn">Изображение</button>
+        <button id="cancel-btn">Отмена</button>
+    `;
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    document.getElementById('color-btn')!.onclick = () => {
+        document.body.removeChild(modal);
+        showColorPicker(dispatch, selected.currentSlideId);
+    };
+
+    document.getElementById('gradient-btn')!.onclick = () => {
+        document.body.removeChild(modal);
+        showGradientPicker(dispatch, selected.currentSlideId);
+    };
+
+    document.getElementById('image-btn')!.onclick = () => {
+        document.body.removeChild(modal);
+        createImageElement().then((elementImage) => {
+            if (selected.currentSlideId) {
+                const background: Background = { 
+                    type: "picture", 
+                    src: elementImage.src 
+                };
+                dispatch(updateSlideBackground(selected.currentSlideId, background));
+            }
+        });
+    };
+
+    document.getElementById('cancel-btn')!.onclick = () => {
+        document.body.removeChild(modal);
+    };
+  };
+
+  return {
+    handleChangeBackground
+  };
 }

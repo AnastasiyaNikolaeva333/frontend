@@ -1,69 +1,69 @@
-import type { Presentation } from "../../types/presentationTypes";
-import { dispatch } from "../../editor";
-import { addSlide, removeSlides, createNewSlide, selectSlide } from "./functionSlide";
-import { addElement, createImageElement, createTextElement, removeElements, selectElements } from "./functionElementsSlide";
-import { handleChangeBackground } from "./functionBackround";
+import { useAppSelector, useAppDispatch } from '../../utils/hooks/redux';
+import { addSlide, removeSlide, addElement, selectElements, removeElements, selectSlide } from '../../store/action-creators/';
+import { createImageElement, createTextElement, createNewSlide } from '../function/functionCreateElements';
+import { useBackgroundActions } from './functionBackround';
 
-function handleToolbarAction(action: string, presentation: Presentation) {
-    console.log("Действие:", action);
+export function useToolbarActions() {
+  const dispatch = useAppDispatch();
+  const selected = useAppSelector((state) => state.selected);
+  const slides = useAppSelector((state) => state.slides);
+  const { handleChangeBackground } = useBackgroundActions();
+
+  const handleToolbarAction = (action: string) => {
+    
     switch (action) {
-        case "add-slide":
-            const newSlide = createNewSlide();
-            dispatch(addSlide, newSlide);
-            break;
-        case "remove-slide":
-            dispatch(selectSlide, presentation.selected.currentSlideId);
-            dispatch(removeSlides, [presentation.selected.currentSlideId]);
-            break;
-        case "add-text":
-            const elementText = createTextElement();
-            dispatch(addElement, elementText);
-            dispatch(selectElements, [elementText.id]);
-            console.log("Добавление текста", presentation.selected.selectedElementIds.size);
-            break;
-        case "add-image":
-            createImageElement().then((elementImage) => {
-                dispatch(addElement, elementImage);
-                dispatch(selectElements, [elementImage.id]);
-                console.log("Добавление изображения", presentation.selected.selectedElementIds.size);
-            });
-            break;
-        case "change-background":
-            handleChangeBackground();
-            console.log("Изменение фона");
-            break;
-        case "remove-element":
-            if (presentation.selected.selectedElementIds) {
-                const elementIdArray = Array.from(presentation.selected.selectedElementIds);
-                dispatch(removeElements, elementIdArray);
-            } else {
-                dispatch(removeElements, [presentation.selected.currentSlideId]);
-            }
-            console.log("Удаление элемента");
-            break;
-        case "file":
-            console.log("Меню Файл");
-            break;
-        case "correction":
-            console.log("Меню Правка");
-            break;
-        case "view":
-            console.log("Меню Вид");
-            break;
-        case "insert":
-            console.log("Меню Вставка");
-            break;
-        case "format":
-            console.log("Меню Формат");
-            break;
-        case "slide":
-            console.log("Меню Слайд");
-            break;
-        default:
-            console.log("Неизвестное действие:", action);
-    }
-};
+      case "add-slide":
+        const newSlide = createNewSlide();
+        dispatch(addSlide(newSlide, selected.currentSlideId));
+        dispatch(selectSlide(newSlide.id));
+        break;
+      case "remove-slide":
+        if (selected.currentSlideId) {
+          const currentIndex = slides.findIndex(slide => slide.id === selected.currentSlideId);
+          
+          dispatch(removeSlide(selected.currentSlideId));
 
-export {
-    handleToolbarAction,
+          if (slides.length > 1) {
+            let newSelectedSlideId: string;
+            
+            if (currentIndex === slides.length - 1) {
+              newSelectedSlideId = slides[currentIndex - 1].id;
+            } else {
+              newSelectedSlideId = slides[currentIndex + 1].id;
+            }
+            
+            dispatch(selectSlide(newSelectedSlideId));
+          }
+        }
+        break;
+      case "add-text":
+        const elementText = createTextElement();
+        if (selected.currentSlideId) {
+          dispatch(addElement(selected.currentSlideId, elementText));
+          dispatch(selectElements([elementText.id]));
+        }
+        break;
+      case "add-image":
+        createImageElement().then((elementImage) => {
+          if (selected.currentSlideId) {
+            dispatch(addElement(selected.currentSlideId, elementImage));
+            dispatch(selectElements([elementImage.id]));
+          }
+        });
+        break;
+      case "change-background":
+        handleChangeBackground();
+        break;
+      case "remove-element":
+        if (selected.selectedElementIds.size > 0 && selected.currentSlideId) {
+          const elementIdsArray = Array.from(selected.selectedElementIds);
+          dispatch(removeElements(selected.currentSlideId, elementIdsArray));
+        }
+        break;
+      default:
+        console.log("❓ Unknown action:", action);
+    }
+  };
+
+  return handleToolbarAction;
 }
