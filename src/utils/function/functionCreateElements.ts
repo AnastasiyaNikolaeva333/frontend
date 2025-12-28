@@ -15,7 +15,7 @@ export const createTextElement = (): TextElement => ({
         fontStyle: "normal",
         fontFamily: "Arial",
         fontSize: 16,
-        fontWeight: "700",
+        fontWeight: "normal",
     }
 });
 

@@ -1,21 +1,23 @@
-import React, { useCallback } from 'react';
-import type { SlideElement } from '../../../types/presentationTypes'; 
-import { TextElementObject } from '../СomponentsSlide/TextElementObject'; 
-import { ImageElementObject } from '../СomponentsSlide/ImageElementObject'; 
-import { renderSlideBackground } from '../BackroundSlide'; 
+import { useCallback } from 'react';
+import type { SlideElement } from '../../../types/presentationTypes';
+import { TextElementObject } from '../СomponentsSlide/TextElement/TextElementObject';
+import { ImageElementObject } from '../СomponentsSlide/ImageElement/ImageElementObject';
+import { renderSlideBackground } from '../BackroundSlide';
+import { SelectionContainer } from '../СomponentsSlide/SelectionContainer/SelectionContainer';
 import styles from "./currentSlide.module.css";
-import { useAppSelector } from '../../../hooks'; 
-import { useMultipleSelection } from '../../../utils/hooks/useMultipleSelection'; 
-import { useMultipleDrag } from '../../../utils/hooks/useMultipleDrag'; 
+import { useAppSelector } from '../../../utils/hooks/redux';
+import { useMultipleSelection } from '../../../utils/hooks/useMultipleSelection';
+import { useMultipleDrag } from '../../../utils/hooks/useMultipleDrag';
+import { selectCurrentSlide, selectSelectedElementIds } from '../../../store';
 
 type CurrentSlideProps = {
   onElementClick: (element: SlideElement) => void;
 };
 
 function CurrentSlide(props: CurrentSlideProps) {
-  const slides = useAppSelector((state) => state.slides);
-  const selected = useAppSelector((state) => state.selected);
-  
+  const currentSlide = useAppSelector(selectCurrentSlide);
+  const selectedElementIds = useAppSelector(selectSelectedElementIds);
+
   const {
     isSelecting,
     selectionRect,
@@ -27,35 +29,61 @@ function CurrentSlide(props: CurrentSlideProps) {
   } = useMultipleSelection();
 
   const {
-    isDragging,
+    isDragging: isGroupDragging,
+    dragDelta,
     startDrag,
     updateDrag,
-    endDrag
+    endDrag,
+    getSelectedElementsInfo,
   } = useMultipleDrag();
 
-  const currentSlide = slides.find(slide => slide.id === selected.currentSlideId) || slides[0];
+  if (!currentSlide?.id) {
+    return (
+      <div className={styles.currentSlide}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <p>Нет выбранного слайда</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hasGroupSelection = selectedElementIds.length > 1;
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    const target = e.target as HTMLElement;
+
+    if (target === e.currentTarget) {
       clearSelection();
       startSelection(e.clientX, e.clientY);
     }
-  }, [clearSelection, startSelection]);
+  }, [startSelection, clearSelection]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isSelecting) {
       updateSelection(e.clientX, e.clientY);
     }
-  }, [isSelecting, updateSelection]);
+    if (isGroupDragging) {
+      updateDrag(e.clientX, e.clientY);
+    }
+  }, [isSelecting, updateSelection, isGroupDragging, updateDrag]);
 
   const handleMouseUp = useCallback(() => {
     if (isSelecting) {
       endSelection();
     }
-    if (isDragging) {
+    if (isGroupDragging) {
       endDrag();
     }
-  }, [isSelecting, endSelection, isDragging, endDrag]);
+  }, [isSelecting, endSelection, isGroupDragging, endDrag]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isSelecting) {
+      endSelection();
+    }
+    if (isGroupDragging) {
+      endDrag();
+    }
+  }, [isSelecting, endSelection, isGroupDragging, endDrag]);
 
   const selectionStyle: React.CSSProperties = selectionRect ? {
     position: 'absolute',
@@ -69,37 +97,63 @@ function CurrentSlide(props: CurrentSlideProps) {
     zIndex: 1000
   } : {};
 
+  const selectedElementsInfo = getSelectedElementsInfo();
+
   return (
-    <div 
+    <div
       ref={slideContainerRef}
-      className={styles.currentSlide} 
+      className={styles.currentSlide}
       style={renderSlideBackground(currentSlide.background)}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
-      {currentSlide.elements.map((element) =>
-        element.type === "text" ? (
+      {currentSlide.elements.map((element: SlideElement) => {
+        const isSelected = selectedElementIds.includes(element.id);
+        const isInGroup = hasGroupSelection && isSelected;
+
+        return element.type === "text" ? (
           <TextElementObject
             key={element.id}
             element={element}
             onClick={props.onElementClick}
-            onDragStart={startDrag}
-            onDrag={updateDrag}
-            onDragEnd={endDrag}
+            isSelected={isSelected}
+            isInGroup={isInGroup}
+            dragDelta={dragDelta}
+            isGroupDragging={isGroupDragging && isSelected}
+            onDragStart={isSelected && !isInGroup ? startDrag : undefined}
+            onDrag={isSelected && !isInGroup ? updateDrag : undefined}
+            onDragEnd={isSelected && !isInGroup ? endDrag : undefined}
           />
         ) : (
           <ImageElementObject
             key={element.id}
             element={element}
             onClick={props.onElementClick}
-            onDragStart={startDrag}
-            onDrag={updateDrag}
-            onDragEnd={endDrag}
+            isSelected={isSelected}
+            isInGroup={isInGroup}
+            dragDelta={dragDelta}
+            isGroupDragging={isGroupDragging && isSelected}
+            onDragStart={isSelected && !isInGroup ? startDrag : undefined}
+            onDrag={isSelected && !isInGroup ? updateDrag : undefined}
+            onDragEnd={isSelected && !isInGroup ? endDrag : undefined}
           />
-        )
+        );
+      })}
+
+      {selectedElementsInfo.length > 1 && (
+        <SelectionContainer
+          selectedElements={selectedElementsInfo}
+          dragDelta={dragDelta}
+          isDragging={isGroupDragging}
+          onMouseDown={(e) => {
+            startDrag(e.clientX, e.clientY);
+            e.stopPropagation();
+          }}
+        />
       )}
-      
+
       {isSelecting && selectionRect && (
         <div style={selectionStyle} />
       )}

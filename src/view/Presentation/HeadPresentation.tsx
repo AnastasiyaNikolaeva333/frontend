@@ -1,7 +1,8 @@
 import styles from "./headPresentation.module.css";
 import { MyButton } from "../Button/Buttons";
 import { useAppSelector, useAppDispatch } from '../../utils/hooks/redux';
-import { changePresentationTitle } from "../../store/action-creators"; 
+import { changePresentationTitle, selectPresentationTitle } from "../../store";
+import { useEffect, useState } from "react";
 
 type HeaderPresentationProps = {
   onSave: () => void;
@@ -9,14 +10,22 @@ type HeaderPresentationProps = {
 
 function HeaderPresentation(props: HeaderPresentationProps) {
   const dispatch = useAppDispatch();
-  const title = useAppSelector((state) => state.title);
+  const title = useAppSelector(selectPresentationTitle);
+  
+  const [editingTitle, setEditingTitle] = useState(title);
 
-  const changeTitle = (newTitle: string) => {
-    dispatch(changePresentationTitle(newTitle));
+  useEffect(() => {
+    setEditingTitle(title);
+  }, [title]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingTitle(e.target.value);
   };
 
-  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
-    changeTitle(e.target.value);
+  const handleBlur = () => {
+    if (editingTitle !== title) {
+      dispatch(changePresentationTitle(editingTitle));
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -32,7 +41,8 @@ function HeaderPresentation(props: HeaderPresentationProps) {
         <input
           type="text"
           className={styles.presentationTitle}
-          defaultValue={title}
+          value={editingTitle} 
+          onChange={handleChange} 
           onBlur={handleBlur}
           onKeyDown={handleKeyPress}
           placeholder="Название презентации"

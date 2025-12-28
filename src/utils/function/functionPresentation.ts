@@ -2,7 +2,7 @@ import type {ID, Selected } from "../../types/presentationTypes.ts";
 
 function createSelected(): Selected {
   return {
-    currentSlideId: null,
+    currentSlideId: [],
     selectedElementIds: new Set<ID>(),
   };
 }

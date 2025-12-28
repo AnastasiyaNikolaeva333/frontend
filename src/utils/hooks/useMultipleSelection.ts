@@ -1,15 +1,12 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from './redux';
-import { selectElements } from '../../store/action-creators'; 
-
+import { selectSlides, selectCurrentSlideId, selectSelectedElementIds, selectElements, selectSlide } from '../../store'; 
 
 export function useMultipleSelection() {
   const dispatch = useAppDispatch();
-  const selectedElementIds = useAppSelector(state => 
-    Array.from(state.selected.selectedElementIds)
-  );
-  const currentSlideId = useAppSelector(state => state.selected.currentSlideId);
-  const slides = useAppSelector(state => state.slides);
+  const selectedElementIds = useAppSelector(selectSelectedElementIds);
+  const currentSlideId = useAppSelector(selectCurrentSlideId);
+  const slides = useAppSelector(selectSlides);
   
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionRect, setSelectionRect] = useState<{
@@ -19,7 +16,7 @@ export function useMultipleSelection() {
     currentY: number;
   } | null>(null);
 
-  const currentSlide = slides.find(slide => slide.id === currentSlideId);
+  const currentSlide = slides.find(slide => slide.id === currentSlideId[0]);
   const slideContainerRef = useRef<HTMLDivElement>(null);
 
   const getSlidePosition = useCallback(() => {
@@ -55,6 +52,8 @@ export function useMultipleSelection() {
                elementBottom < top || 
                elementTop > bottom);
     });
+
+    if (currentSlideId.length > 1) dispatch(selectSlide([currentSlideId[0]]));
 
     dispatch(selectElements(elementsInRect.map(el => el.id)));
   }, [currentSlide, dispatch]);
@@ -98,6 +97,25 @@ export function useMultipleSelection() {
     dispatch(selectElements([]));
   }, [dispatch]);
 
+  const handleBackgroundClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+
+    if (!target.closest('.slide-element') && !target.closest('.resize-handle')) {
+      clearSelection();
+    }
+  }, [clearSelection]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        clearSelection();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [clearSelection]);
+
   return {
     selectedElementIds,
     isSelecting,
@@ -106,6 +124,7 @@ export function useMultipleSelection() {
     updateSelection,
     endSelection,
     clearSelection,
+    handleBackgroundClick,
     slideContainerRef
   };
 }

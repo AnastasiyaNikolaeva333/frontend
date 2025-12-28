@@ -1,9 +1,10 @@
 import type { Color, Background } from "../../types/presentationTypes";
 import { useAppDispatch, useAppSelector } from '../../utils/hooks/redux';
-import { updateSlideBackground } from '../../store/action-creators/slides';
+import { updateSlideBackground } from '../../store/slice/slidesSlice';
+import { selectCurrentSlideId } from '../../store';
 import { createImageElement } from './functionCreateElements'; 
 
-function showColorPicker(dispatch: any, slideId: string | null) {
+function showColorPicker(dispatch: any, slideId: string[]) {
     if (!slideId) return;
     
     const colorInput = document.createElement('input');
@@ -18,7 +19,7 @@ function showColorPicker(dispatch: any, slideId: string | null) {
                 type: "color", 
                 color: target.value 
             };
-            dispatch(updateSlideBackground(slideId, background));
+            dispatch(updateSlideBackground({ slideId, background }));
         }
         document.body.removeChild(colorInput);
     };
@@ -31,7 +32,7 @@ function showColorPicker(dispatch: any, slideId: string | null) {
     colorInput.click();
 }
 
-function showGradientPicker(dispatch: any, slideId: string | null) {
+function showGradientPicker(dispatch: any, slideId: string[]) {
     if (!slideId) return;
     
     const modal = document.createElement('div');
@@ -188,7 +189,7 @@ function showGradientPicker(dispatch: any, slideId: string | null) {
             colors: gradientColors
         };
         
-        dispatch(updateSlideBackground(slideId, background));
+        dispatch(updateSlideBackground({ slideId, background }));
         document.body.removeChild(modal);
     };
 
@@ -222,7 +223,7 @@ function showSingleColorPicker(currentColor: string = '#ffffff'): Promise<string
 
 export function useBackgroundActions() {
   const dispatch = useAppDispatch();
-  const selected = useAppSelector((state) => state.selected);
+  const currentSlideId = useAppSelector(selectCurrentSlideId);
 
   const handleChangeBackground = () => {
     const modal = document.createElement('div');
@@ -262,23 +263,23 @@ export function useBackgroundActions() {
 
     document.getElementById('color-btn')!.onclick = () => {
         document.body.removeChild(modal);
-        showColorPicker(dispatch, selected.currentSlideId);
+        showColorPicker(dispatch, currentSlideId);
     };
 
     document.getElementById('gradient-btn')!.onclick = () => {
         document.body.removeChild(modal);
-        showGradientPicker(dispatch, selected.currentSlideId);
+        showGradientPicker(dispatch, currentSlideId);
     };
 
     document.getElementById('image-btn')!.onclick = () => {
         document.body.removeChild(modal);
         createImageElement().then((elementImage) => {
-            if (selected.currentSlideId) {
+            if (currentSlideId) {
                 const background: Background = { 
                     type: "picture", 
                     src: elementImage.src 
                 };
-                dispatch(updateSlideBackground(selected.currentSlideId, background));
+                dispatch(updateSlideBackground({ slideId: currentSlideId, background }));
             }
         });
     };

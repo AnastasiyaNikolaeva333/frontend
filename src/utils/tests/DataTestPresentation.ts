@@ -5,7 +5,7 @@ import type {
   TextElement,
   ImageElement,
   Picture,
-  // Gradient,
+  Gradient,
 } from "../../types/presentationTypes";
 import { createSelected } from "../function/functionPresentation";
 
@@ -24,13 +24,13 @@ const pictureBackground: Picture = {
   src: "src/assets/blueWhiteFon.png",
 };
 
-// const gradientBackground: Gradient = {
-//   type: "gradient",
-//   colors: [
-//     { type: "color", color: "#4b92eeff" },
-//     { type: "color", color: "#9fe84bff" },
-//   ],
-// };
+const gradientBackground: Gradient = {
+  type: "gradient",
+  colors: [
+    { type: "color", color: "#4b92eeff" },
+    { type: "color", color: "#9fe84bff" },
+  ],
+};
 
 const maximalDataTextElement1: TextElement = {
   id: "maximal-text-1",
@@ -74,7 +74,7 @@ const maximalDataImageElement2: ImageElement = {
   id: "maximal-image-2",
   type: "image",
   src: "src/assets/spring.png",
-  position: { x: 40, y: 100 },
+  position: { x: 40, y: 50 },
   sizes: { width: 400, height: 400 },
 };
 
@@ -90,50 +90,50 @@ const maximalDataSlide2: Slide = {
   background: pictureBackground,
 };
 
-// const maximalDataSlide3: Slide = {
-//   id: "maximal-slide-3",
-//   elements: [
-//     // maximalDataImageElement1,
-//     // maximalDataImageElement2,
-//   ],
-//   background: gradientBackground,
-// };
+const maximalDataSlide3: Slide = {
+  id: "maximal-slide-3",
+  elements: [
+    maximalDataImageElement1,
+    maximalDataImageElement2,
+  ],
+  background: gradientBackground,
+};
 
-// const maximalDataSlide4: Slide = {
-//   id: "maximal-slide-4",
-//   elements: [
-//     // maximalDataTextElement1, maximalDataImageElement2
+const maximalDataSlide4: Slide = {
+  id: "maximal-slide-4",
+  elements: [
+    maximalDataTextElement1, maximalDataImageElement2
 
-//   ],
-//   background: colorBackground,
-// };
+  ],
+  background: colorBackground,
+};
 
-// const maximalDataSlide5: Slide = {
-//   id: "maximal-slide-5",
-//   elements: [
-//     // maximalDataTextElement2, maximalDataImageElement1
-//   ],
-//   background: pictureBackground,
-// };
+const maximalDataSlide5: Slide = {
+  id: "maximal-slide-5",
+  elements: [
+    maximalDataTextElement2, maximalDataImageElement1
+  ],
+  background: pictureBackground,
+};
 
-// const maximalDataSlide6: Slide = {
-//   id: "maximal-slide-6",
-//   elements: [
-//     // maximalDataImageElement1,
-//     // maximalDataImageElement2,
-//   ],
-//   background: standardColorBackround,
-// };
+const maximalDataSlide6: Slide = {
+  id: "maximal-slide-6",
+  elements: [
+    maximalDataImageElement1,
+    maximalDataImageElement2,
+  ],
+  background: standardColorBackround,
+};
 
 const maximalPresentation: Presentation = {
   title: "Презентация с полным наполнением",
   allSlides: [
     maximalDataSlide1,
     maximalDataSlide2,
-    // maximalDataSlide3,
-    // maximalDataSlide4,
-    // maximalDataSlide5,
-    // maximalDataSlide6,
+    maximalDataSlide3,
+    maximalDataSlide4,
+    maximalDataSlide5,
+    maximalDataSlide6,
   ],
   selected: createSelected(),
 };

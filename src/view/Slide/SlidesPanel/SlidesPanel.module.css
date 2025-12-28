@@ -31,6 +31,7 @@
 
 .slideThumbnail {
   margin: 10px;
+  padding: 4px;
   cursor: pointer;
   border: 2px solid #3c4043;
   border-radius: 4px;
@@ -39,13 +40,13 @@
 }
 
 .slideThumbnail.active {
-  border-color: #007acc;
+  border: 5px solid #007acc;
 }
 
 .thumbnailSlide {
   width: 960px;
-  height: 510px;
+  height: 477px;
   border: 1px solid #ccc;
   background-color: white;
-  pointer-events: none 
+  pointer-events: none;
 }

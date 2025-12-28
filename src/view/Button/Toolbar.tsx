@@ -27,7 +27,7 @@ function Toolbar(props: ToolbarProps) {
     ],
     slidesPanel: [
       { text: "+", action: "add-slide", title: "Добавить слайд" },
-      { text: "×", action: "remove-slide", title: "Удалить слайд" },
+      { text: "×", action: "remove-slides", title: "Удалить слайд" },
     ],
   };
 

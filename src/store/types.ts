@@ -1,14 +1,7 @@
-import type { store } from './store';
-import * as ActionCreators from './action-creators/'
+import { store } from './store';
 
-type ActionsUnion<T extends Record<string, (...args: any[]) => any>> = 
-  ReturnType<T[keyof T]>;
-
-type AppStore = typeof store
-type RootState = ReturnType<typeof store.getState>
-type AppDispatch = typeof store.dispatch
-
-type AllActions = ActionsUnion<typeof ActionCreators>
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 
 export type { 
   ID,
@@ -22,11 +15,3 @@ export type {
   Slide,
   Selected 
 } from '../types/presentationTypes';
-
-export type {
-    ActionsUnion,
-    AppStore,
-    RootState,
-    AppDispatch,
-    AllActions,
-}

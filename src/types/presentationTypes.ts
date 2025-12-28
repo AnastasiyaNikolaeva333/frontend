@@ -69,7 +69,7 @@ type Gradient = {
 };
 
 type Selected = {
-  currentSlideId: ID | null;
+  currentSlideId: ID[];
   selectedElementIds: Set<ID>;
 };
 

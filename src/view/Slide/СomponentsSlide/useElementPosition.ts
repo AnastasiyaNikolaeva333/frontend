@@ -1,19 +1,24 @@
 import { useDispatch } from 'react-redux';
-import { selectElements, updateElementPosition } from '../../../store/action-creators/elements';
+import { selectSlide, updateElementPosition } from '../../../store';
 import type { SlideElement } from '../../../types/presentationTypes';
 import { useDnd } from '../../../utils/hooks/useDnd';
 import { useAppSelector } from '../../../utils/hooks/redux';
+import { selectSlides, selectCurrentSlideId } from '../../../store';
 
-function useElementPosition(element: SlideElement) {
+function useElementPosition(
+  element: SlideElement,
+  onDrag?: (x: number, y: number) => void,
+  onDragEnd?: () => void
+) {
   const dispatch = useDispatch();
-  const slides = useAppSelector((state) => state.slides);
+  const slides = useAppSelector(selectSlides);
+  const currentSlideId = useAppSelector(selectCurrentSlideId);
 
   const startX = element.position.x;
   const startY = element.position.y;
 
-  const currentSlide = slides.find(slide =>
-    slide.elements.some(el => el.id === element.id)
-  );
+  const currentSlide = slides.find(slide => slide.id === currentSlideId[0]);
+  const elementInCurrentSlide = currentSlide?.elements.find(el => el.id === element.id);
 
   const {
     isDragging,
@@ -23,34 +28,80 @@ function useElementPosition(element: SlideElement) {
   } = useDnd({
     startX,
     startY,
-    onDrag: () => { },
+    onDrag: (newX: number, newY: number) => {
+      const deltaX = newX - startX;
+      const deltaY = newY - startY;
+
+      if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+        onDrag?.(deltaX, deltaY);
+      }
+    },
     onFinish: (newX: number, newY: number) => {
-      if (currentSlide) {
-        dispatch(updateElementPosition(
-          currentSlide.id,      
-          element.id,           
-          { x: newX, y: newY }
-        ));
-        dispatch(selectElements([element.id]));
+      
+      const deltaX = Math.abs(newX - startX);
+      const deltaY = Math.abs(newY - startY);
+      const hasMoved = deltaX > 1 || deltaY > 1;
+      
+       if (currentSlideId.length > 1) dispatch(selectSlide([currentSlideId[0]]));
+
+      if (hasMoved && currentSlideId && elementInCurrentSlide) {
+        dispatch(updateElementPosition({
+          slideId: currentSlideId,      
+          elementId: element.id,           
+          newPosition: { x: newX, y: newY }
+        }));
+        onDragEnd?.();
+      } else if (hasMoved) {
+        onDragEnd?.();
       }
     }
   });
 
-  const getElementStyle = (): React.CSSProperties => ({
-    position: "absolute",
-    left: isDragging ? left : `${startX}px`,
-    top: isDragging ? top : `${startY}px`,
-    width: `${element.sizes.width}px`,
-    height: `${element.sizes.height}px`,
-    userSelect: isDragging ? 'none' : 'auto',
-    cursor: isDragging ? 'grabbing' : 'grab',
-  });
+  const getElementStyle = (dragDelta?: { x: number; y: number }): React.CSSProperties => {
+    if (isDragging) {
+      return {
+        position: "absolute",
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${element.sizes.width}px`,
+        height: `${element.sizes.height}px`,
+        userSelect: 'none',
+        cursor: 'grabbing',
+      };
+    }
+    
+    if (dragDelta) {
+
+      const actualDeltaX = Math.abs(dragDelta.x) > 1 ? dragDelta.x : 0;
+      const actualDeltaY = Math.abs(dragDelta.y) > 1 ? dragDelta.y : 0;
+      
+      return {
+        position: "absolute",
+        left: `${startX + actualDeltaX}px`,
+        top: `${startY + actualDeltaY}px`,
+        width: `${element.sizes.width}px`,
+        height: `${element.sizes.height}px`,
+        userSelect: 'auto',
+        cursor: 'default',
+      };
+    }
+    
+    return {
+      position: "absolute",
+      left: `${startX}px`,
+      top: `${startY}px`,
+      width: `${element.sizes.width}px`,
+      height: `${element.sizes.height}px`,
+      userSelect: 'auto',
+      cursor: 'grab',
+    };
+  };
 
   return {
     isDragging,
-    elementStyle: getElementStyle(),
+    elementStyle: getElementStyle, 
     onMouseDown,
   };
 }
 
-export { useElementPosition }
+export { useElementPosition };
