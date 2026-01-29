@@ -1,4 +1,3 @@
-// utils/hooks/useUndoRedo.ts
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from './redux';
 import { setCanUndo, setCanRedo } from '../../store/history/undoRedoSlice';

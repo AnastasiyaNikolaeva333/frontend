@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux';
-import { selectSlide, updateElementPosition } from '../../../store';
+import { selectSlide, updateElementPositions } from '../../../store';
 import type { SlideElement } from '../../../types/presentationTypes';
 import { useDnd } from '../../../utils/hooks/useDnd';
 import { useAppSelector } from '../../../utils/hooks/redux';
@@ -37,19 +37,19 @@ function useElementPosition(
       }
     },
     onFinish: (newX: number, newY: number) => {
-      
+
       const deltaX = Math.abs(newX - startX);
       const deltaY = Math.abs(newY - startY);
       const hasMoved = deltaX > 1 || deltaY > 1;
-      
-       if (currentSlideId.length > 1) dispatch(selectSlide([currentSlideId[0]]));
+
+      if (currentSlideId.length > 1) dispatch(selectSlide([currentSlideId[0]]));
 
       if (hasMoved && currentSlideId && elementInCurrentSlide) {
-        dispatch(updateElementPosition({
-          slideId: currentSlideId,      
-          elementId: element.id,           
+        dispatch(updateElementPositions([{
+          slideId: currentSlideId,
+          elementId: element.id,
           newPosition: { x: newX, y: newY }
-        }));
+        }]));
         onDragEnd?.();
       } else if (hasMoved) {
         onDragEnd?.();
@@ -69,12 +69,12 @@ function useElementPosition(
         cursor: 'grabbing',
       };
     }
-    
+
     if (dragDelta) {
 
       const actualDeltaX = Math.abs(dragDelta.x) > 1 ? dragDelta.x : 0;
       const actualDeltaY = Math.abs(dragDelta.y) > 1 ? dragDelta.y : 0;
-      
+
       return {
         position: "absolute",
         left: `${startX + actualDeltaX}px`,
@@ -85,7 +85,7 @@ function useElementPosition(
         cursor: 'default',
       };
     }
-    
+
     return {
       position: "absolute",
       left: `${startX}px`,
@@ -99,7 +99,7 @@ function useElementPosition(
 
   return {
     isDragging,
-    elementStyle: getElementStyle, 
+    elementStyle: getElementStyle,
     onMouseDown,
   };
 }

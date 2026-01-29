@@ -4,21 +4,13 @@ import { MyButton } from "./Buttons";
 import { useToolbarActions } from "../../utils/function/functionToolbar";
 
 type ToolbarProps = {
-  mode?: "main" | "workspace" | "slidesPanel";
+  mode?: "workspace" | "slidesPanel";
 };
 
 function Toolbar(props: ToolbarProps) {
   const handleToolbarAction = useToolbarActions();
 
   const toolbarConfig = {
-    main: [
-      { text: "Файл", action: "file" },
-      { text: "Правка", action: "correction" },
-      { text: "Вид", action: "view" },
-      { text: "Вставка", action: "insert" },
-      { text: "Формат", action: "format" },
-      { text: "Слайд", action: "slide" },
-    ],
     workspace: [
       { text: "Добавить текст", action: "add-text" },
       { text: "Добавить изображение", action: "add-image" },
@@ -31,7 +23,7 @@ function Toolbar(props: ToolbarProps) {
     ],
   };
 
-  const items = toolbarConfig[props.mode || "main"];
+  const items = toolbarConfig[props.mode || "workspace"];
   const toolbarClass =
     props.mode === "workspace"
       ? `${stylesToolBar.toolbar} ${stylesToolBar.workspaceToolbar}`

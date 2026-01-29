@@ -17,6 +17,16 @@ type CurrentSlideProps = {
 function CurrentSlide(props: CurrentSlideProps) {
   const currentSlide = useAppSelector(selectCurrentSlide);
   const selectedElementIds = useAppSelector(selectSelectedElementIds);
+  
+  if (!currentSlide?.id) {
+    return (
+      <div className={styles.currentSlide}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <p>Нет выбранного слайда</p>
+        </div>
+      </div>
+    );
+  }
 
   const {
     isSelecting,
@@ -36,16 +46,6 @@ function CurrentSlide(props: CurrentSlideProps) {
     endDrag,
     getSelectedElementsInfo,
   } = useMultipleDrag();
-
-  if (!currentSlide?.id) {
-    return (
-      <div className={styles.currentSlide}>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <p>Нет выбранного слайда</p>
-        </div>
-      </div>
-    );
-  }
 
   const hasGroupSelection = selectedElementIds.length > 1;
 

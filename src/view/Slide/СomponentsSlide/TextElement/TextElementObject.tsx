@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TextElement } from "../../../../store/types";
 import { useAppDispatch, useAppSelector } from "../../../../utils/hooks/redux";
@@ -7,7 +6,6 @@ import styles from "./TextElementObject.module.css";
 import { useElementPosition } from "../useElementPosition";
 import { useResize } from "../../../../utils/hooks/useResize";
 import { updateTextContent } from "../../../../store";
-
 
 type TextElementProps = {
   element: TextElement;
@@ -26,8 +24,9 @@ function TextElementObject(props: TextElementProps) {
   const { handleElementClick, isActive } = useSelection(props.element);
   const [isEditing, setIsEditing] = useState(false);
   const [localContent, setLocalContent] = useState(props.element.content);
-  const inputRef = useRef<HTMLInputElement>(null);
-
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const currentSlideId = useAppSelector((state) => state.selection.currentSlideId);
 
   const { 
@@ -55,9 +54,9 @@ function TextElementObject(props: TextElementProps) {
   }, [props.element.content]);
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
     }
   }, [isEditing]);
 
@@ -67,7 +66,7 @@ function TextElementObject(props: TextElementProps) {
       left: `${isResizing ? position.x : props.element.position.x}px`,
       top: `${isResizing ? position.y : props.element.position.y}px`,
       width: `${isResizing ? width : props.element.sizes.width}px`,
-      height: `${isResizing ? height : props.element.sizes.height}px`,
+      height: `${props.element.sizes.height}px`,
       fontFamily: props.element.style.fontFamily,
       fontSize: `${props.element.style.fontSize}px`,
       fontWeight: props.element.style.fontWeight,
@@ -78,18 +77,20 @@ function TextElementObject(props: TextElementProps) {
       zIndex: isEditing || isActive ? 100 : "auto",
     };
 
+    if (isEditing) {
+      style.height = `${props.element.sizes.height}px`;
+    } else {
+      style.height = `${isResizing ? height : props.element.sizes.height}px`;
+    }
+
     if (props.isInGroup && props.isGroupDragging && props.dragDelta) {
       style.transform = `translate(${props.dragDelta.x}px, ${props.dragDelta.y}px)`;
       style.opacity = 0.8;
       style.pointerEvents = 'none';
-    }
-
-    else if (props.isInGroup || !props.isSelected) {
+    } else if (props.isInGroup || !props.isSelected) {
       style.pointerEvents = 'auto';
       style.cursor = 'default';
-    }
-
-    else if (props.isSelected && !props.isInGroup) {
+    } else if (props.isSelected && !props.isInGroup) {
       if (isDragging) {
         const currentElementStyle = elementStyle();
         style.left = currentElementStyle.left;
@@ -115,7 +116,12 @@ function TextElementObject(props: TextElementProps) {
   ]);
 
   const elementClasses = useMemo(() =>
-    `${styles.textElement} ${isActive ? styles.active : ""} ${isDragging ? styles.dragging : ""} ${isResizing ? styles.resizing : ""}`,
+    `
+      ${styles.textElement}
+      ${isActive ? styles.active : ""} 
+      ${isDragging ? styles.dragging : ""} 
+      ${isResizing ? styles.resizing : ""}
+    `,
     [isActive, isDragging, isResizing]
   );
 
@@ -154,7 +160,7 @@ function TextElementObject(props: TextElementProps) {
     }
   }, [props, handleElementClick]);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setLocalContent(e.target.value);
   }, []);
 
@@ -169,25 +175,15 @@ function TextElementObject(props: TextElementProps) {
     }
   }, [currentSlideId, localContent, props.element.content, props.element.id, dispatch]);
 
-  const handleInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      setIsEditing(false);
-      if (currentSlideId && localContent !== props.element.content) {
-        dispatch(updateTextContent({
-          slideId: currentSlideId,
-          elementId: props.element.id,
-          newText: localContent
-        }));
-      }
-      e.currentTarget.blur();
-    } else if (e.key === 'Escape') {
+  const handleTextareaKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
       setIsEditing(false);
       setLocalContent(props.element.content);
       e.currentTarget.blur();
-    }
+    } 
   }, [currentSlideId, localContent, props.element.content, props.element.id, dispatch]);
 
-  const handleInputMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleTextareaMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
 
@@ -235,17 +231,18 @@ function TextElementObject(props: TextElementProps) {
 
   if (isEditing) {
     return (
-      <input
-        ref={inputRef}
-        type="text"
-        style={textStyle}
+      <textarea
+        ref={textareaRef}
+        style={{
+          ...textStyle
+        }}
         className={`${styles.textElement} ${styles.editing}`}
         placeholder="Введите текст"
         value={localContent}
-        onChange={handleInputChange}
+        onChange={handleTextareaChange}
         onBlur={handleInputBlur}
-        onKeyDown={handleInputKeyDown}
-        onMouseDown={handleInputMouseDown}
+        onKeyDown={handleTextareaKeyDown}
+        onMouseDown={handleTextareaMouseDown}
       />
     );
   }
@@ -257,7 +254,9 @@ function TextElementObject(props: TextElementProps) {
       onClick={handleClick}
       className={elementClasses}
     >
-      <div className={styles.textContent}>
+      <div
+        className={styles.textContent}
+      >
         {props.element.content || "Введите текст"}
       </div>
       {resizeHandles}

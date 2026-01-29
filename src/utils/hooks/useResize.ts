@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from './redux';
-import { updateElementSize, updateElementPosition } from '../../store';
+import { updateElementSize, updateElementPositions } from '../../store';
 import { selectCurrentSlideId } from '../../store';
 
 export type ResizeDirection =
@@ -186,11 +186,11 @@ function useResize(props: UseResizeProps) {
 
         if (finalX !== startDataRef.current.x || finalY !== startDataRef.current.y) {
           console.log(props.elementId);
-          dispatch(updateElementPosition({
+          dispatch(updateElementPositions([{
             slideId: currentSlideId,
             elementId: props.elementId,
             newPosition: { x: finalX, y: finalY }
-          }));
+          }]));
         }
       }
 

@@ -92,36 +92,25 @@ const maximalDataSlide2: Slide = {
 
 const maximalDataSlide3: Slide = {
   id: "maximal-slide-3",
-  elements: [
-    maximalDataImageElement1,
-    maximalDataImageElement2,
-  ],
+  elements: [maximalDataImageElement1, maximalDataImageElement2],
   background: gradientBackground,
 };
 
 const maximalDataSlide4: Slide = {
   id: "maximal-slide-4",
-  elements: [
-    maximalDataTextElement1, maximalDataImageElement2
-
-  ],
+  elements: [maximalDataTextElement1, maximalDataImageElement2],
   background: colorBackground,
 };
 
 const maximalDataSlide5: Slide = {
   id: "maximal-slide-5",
-  elements: [
-    maximalDataTextElement2, maximalDataImageElement1
-  ],
+  elements: [maximalDataTextElement2, maximalDataImageElement1],
   background: pictureBackground,
 };
 
 const maximalDataSlide6: Slide = {
   id: "maximal-slide-6",
-  elements: [
-    maximalDataImageElement1,
-    maximalDataImageElement2,
-  ],
+  elements: [maximalDataImageElement1, maximalDataImageElement2],
   background: standardColorBackround,
 };
 
@@ -138,8 +127,4 @@ const maximalPresentation: Presentation = {
   selected: createSelected(),
 };
 
-export {
-  maximalPresentation,
-  standardColorBackround,
-  pictureBackground
-};
+export { maximalPresentation, standardColorBackround, pictureBackground };

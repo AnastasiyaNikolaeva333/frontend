@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from './redux';
-import { updateMultipleElementPositions } from '../../store';
-import { selectSlides, selectCurrentSlideId, selectSelectedElementIds } from '../../store';
+import { selectSlides, selectCurrentSlideId, selectSelectedElementIds, updateElementPositions } from '../../store';
 import type { Position, Size } from '../../types/presentationTypes';
 
 export function useMultipleDrag() {
@@ -76,7 +75,7 @@ export function useMultipleDrag() {
         });
 
       if (updates.length > 1) {
-        dispatch(updateMultipleElementPositions(updates));
+        dispatch(updateElementPositions(updates));
       }
     }
 

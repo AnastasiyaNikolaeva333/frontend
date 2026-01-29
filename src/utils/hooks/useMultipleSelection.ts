@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useAppSelector, useAppDispatch } from './redux';
 import { selectSlides, selectCurrentSlideId, selectSelectedElementIds, selectElements, selectSlide } from '../../store'; 
 
@@ -53,7 +53,7 @@ export function useMultipleSelection() {
                elementTop > bottom);
     });
 
-    if (currentSlideId.length > 1) dispatch(selectSlide([currentSlideId[0]]));
+    dispatch(selectSlide([currentSlideId[0]]));
 
     dispatch(selectElements(elementsInRect.map(el => el.id)));
   }, [currentSlide, dispatch]);
@@ -105,16 +105,7 @@ export function useMultipleSelection() {
     }
   }, [clearSelection]);
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        clearSelection();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [clearSelection]);
+  
 
   return {
     selectedElementIds,

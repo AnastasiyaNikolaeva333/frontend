@@ -29,7 +29,6 @@ function useDnd(args: DndArgs): DndResult {
   const [top, setTop] = useState(startY)
   const [left, setLeft] = useState(startX)
   
-  // Храним оригинальные позиции при начале перетаскивания
   const originalPosRef = useRef({ x: startX, y: startY })
   const hasPositionChangedRef = useRef(false)
 
@@ -54,10 +53,9 @@ function useDnd(args: DndArgs): DndResult {
         const newTop = event.clientY - offsetY
         const newLeft = event.clientX - offsetX
         
-        // Проверяем, изменилась ли позиция
         const deltaX = Math.abs(newLeft - originalPosRef.current.x)
         const deltaY = Math.abs(newTop - originalPosRef.current.y)
-        const hasMoved = deltaX > 1 || deltaY > 1 // Порог в 1px
+        const hasMoved = deltaX > 1 || deltaY > 1 
         
         if (hasMoved) {
           setTop(newTop)
@@ -82,7 +80,6 @@ function useDnd(args: DndArgs): DndResult {
       if (isDragging) {
         setIsDragging(false)
         
-        // Вызываем onFinish только если позиция изменилась
         if (hasPositionChangedRef.current) {
           onFinish?.(left, top)
         }

@@ -1,26 +1,35 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAppSelector, useAppDispatch } from "../../../utils/hooks/redux";
+
 import { Toolbar } from "../../Button/Toolbar";
 import { renderSlideBackground } from "../BackroundSlide";
 import styles from "./slidesPanel.module.css";
-import { useAppSelector, useAppDispatch } from '../../../utils/hooks/redux';
-import { changeSlidePositions } from '../../../store';
-import { selectSlide, selectSlides, selectCurrentSlideId } from "../../../store";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { TextElementObject } from "../СomponentsSlide/TextElement/TextElementObject";
-import { ImageElementObject } from "../СomponentsSlide/ImageElement/ImageElementObject"; 
-import type { Slide, SlideElement } from '../../../types/presentationTypes';
+import type { Slide, SlideElement } from "../../../types/presentationTypes";
+import { SimplifiedImageElement, SimplifiedTextElement } from "./SlideThumbnailContent";
+import { changeSlidePositions, selectCurrentSlideId, selectSelectedElementIds, selectSlide, selectSlides } from "../../../store";
 
-function SlidesPanel() {
+const scale = 0.2;
+
+const SlidesPanel = () => {
   const dispatch = useAppDispatch();
   const slides = useAppSelector(selectSlides);
-  const currentSlideId = useAppSelector(selectCurrentSlideId); // содержит ВСЕ выделенные слайды
-
-  const scale = 0.2;
+  const currentSlideId = useAppSelector(selectCurrentSlideId);
+  const selectedElementIds = useAppSelector(selectSelectedElementIds); 
+  
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
-
   const slidesListRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
 
-  // Установка первого слайда по умолчанию
+  const currentSlideIdStr = currentSlideId.length > 0 ? currentSlideId[0] : null;
+
+  const isCurrentSlide = (slideId: string) => {
+    return currentSlideIdStr === slideId;
+  };
+
+  const isElementSelectedOnCurrentSlide = (elementId: string, slideId: string) => {
+    return isCurrentSlide(slideId) && selectedElementIds.includes(elementId);
+  };
+
   useEffect(() => {
     if (slides.length > 0 && currentSlideId.length === 0) {
       const firstSlideId = slides[0].id;
@@ -29,18 +38,14 @@ function SlidesPanel() {
     }
   }, [slides, currentSlideId, dispatch]);
 
-  // Синхронизация lastSelectedIndex
   useEffect(() => {
     if (currentSlideId.length > 0) {
       const firstId = currentSlideId[0];
-      const index = slides.findIndex(slide => slide.id === firstId);
-      if (index !== -1) {
-        setLastSelectedIndex(index);
-      }
+      const index = slides.findIndex((slide) => slide.id === firstId);
+      if (index !== -1) setLastSelectedIndex(index);
     }
   }, [currentSlideId, slides]);
 
-  // Автопрокрутка к первому выделенному слайду
   useEffect(() => {
     if (currentSlideId.length > 0 && shouldAutoScrollRef.current) {
       const firstId = currentSlideId[0];
@@ -48,86 +53,79 @@ function SlidesPanel() {
       if (slideElement) {
         setTimeout(() => {
           slideElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-            inline: 'nearest'
+            behavior: "smooth",
+            block: "nearest",
+            inline: "nearest",
           });
         }, 100);
       }
     }
   }, [currentSlideId]);
 
-  const handleSlideClick = (e: React.MouseEvent, slideId: string, index: number) => {
+  const handleSlideClick = useCallback((e: React.MouseEvent, slideId: string, index: number) => {
     e.stopPropagation();
-    shouldAutoScrollRef.current = true;
 
     let newSelectedIds: string[] = [];
 
     if (e.shiftKey && lastSelectedIndex !== null) {
-      // Выделение диапазона
       const start = Math.min(lastSelectedIndex, index);
       const end = Math.max(lastSelectedIndex, index);
-      newSelectedIds = slides.slice(start, end + 1).map(slide => slide.id);
+      newSelectedIds = slides.slice(start, end + 1).map((s) => s.id);
     } 
+
     else if (e.ctrlKey || e.metaKey) {
-      // Множественный выбор - добавляем/удаляем из текущего выделения
       const isSelected = currentSlideId.includes(slideId);
       newSelectedIds = isSelected
-        ? currentSlideId.filter(id => id !== slideId)
+        ? currentSlideId.filter((id) => id !== slideId)
         : [...currentSlideId, slideId];
     } 
+
     else {
-      // Одиночный выбор
       newSelectedIds = [slideId];
     }
 
-    // Обновляем выделение (всегда передаем массив)
     dispatch(selectSlide(newSelectedIds));
     setLastSelectedIndex(index);
-  };
+  }, [slides, currentSlideId, lastSelectedIndex, dispatch]);
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, slideId: string) => {
-    // Используем currentSlideId (все выделенные слайды)
-    const slideIdsToDrag = currentSlideId.length > 0 ? currentSlideId : [slideId];
-    e.dataTransfer.setData("text/plain", JSON.stringify(slideIdsToDrag));
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    const targetId = e.currentTarget.dataset.slideId!;
+    const isTargetSelected = currentSlideId.includes(targetId);
+
+    const slideIdsToDrag = isTargetSelected ? currentSlideId : [targetId];
+
+    if (!isTargetSelected) {
+      dispatch(selectSlide([targetId]));
+    }
+
+    e.dataTransfer.setData("text/plain", JSON.stringify(slideIdsToDrag));
+    e.dataTransfer.effectAllowed = "move";
+  }, [currentSlideId, dispatch]);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
 
     try {
-      const slideIdsToMove = JSON.parse(e.dataTransfer.getData("text/plain")) as string[];
+      const raw = e.dataTransfer.getData("text/plain");
+      const slideIdsToMove = JSON.parse(raw) as string[];
 
       if (slideIdsToMove.length === 0) return;
 
-      dispatch(changeSlidePositions({
-        slideIds: slideIdsToMove,
-        targetIndex: targetIndex
-      }));
-
-      // После перемещения выделяем те же слайды
+      dispatch(changeSlidePositions({ slideIds: slideIdsToMove, targetIndex }));
       dispatch(selectSlide(slideIdsToMove));
-      
-      // Обновляем индекс первого выделенного слайда
-      if (slideIdsToMove.length > 0) {
-        const index = slides.findIndex(slide => slide.id === slideIdsToMove[0]);
-        if (index !== -1) {
-          setLastSelectedIndex(index);
-        }
-      }
     } catch (error) {
       console.error("Ошибка при перемещении слайдов:", error);
     }
-  };
+  }, [dispatch]);
 
-  const handleBackgroundClick = useCallback(() => {
-    // При клике на фон сбрасываем выделение (выделяем первый слайд)
+  const handleBackgroundClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+
     if (slides.length > 0) {
       const firstSlideId = slides[0].id;
       dispatch(selectSlide([firstSlideId]));
@@ -143,11 +141,8 @@ function SlidesPanel() {
           <Toolbar mode="slidesPanel" />
         </div>
       </div>
-      <div
-        className={styles.slidesList}
-        onClick={handleBackgroundClick}
-        ref={slidesListRef}
-      >
+
+      <div className={styles.slidesList} onClick={handleBackgroundClick} ref={slidesListRef}>
         {slides.map((slide: Slide, index: number) => {
           const isSelected = currentSlideId.includes(slide.id);
 
@@ -156,21 +151,16 @@ function SlidesPanel() {
               key={slide.id}
               id={`slide-thumb-${slide.id}`}
               data-slide-id={slide.id}
-              className={`
-                ${styles.slideThumbnail} 
-                ${isSelected ? styles.active : ""} 
-              `}
-              onClick={(e) => handleSlideClick(e, slide.id, index)}
+              className={`${styles.slideThumbnail} ${isSelected ? styles.active : ""}`} 
               draggable
-              onDragStart={(e) => handleDragStart(e, slide.id)}
+              onClick={(e) => handleSlideClick(e, slide.id, index)}
+              onDragStart={handleDragStart}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, index)}
             >
               <div
-                style={{
-                  transform: `scale(${scale})`,
-                  transformOrigin: "top left",
-                }}
+                className={styles.thumbScale}
+                style={{ transform: `scale(${scale})`, transformOrigin: "top left" }}
               >
                 <div
                   className={styles.thumbnailSlide}
@@ -178,16 +168,18 @@ function SlidesPanel() {
                 >
                   {slide.elements?.map((element: SlideElement) =>
                     element.type === "text" ? (
-                      <TextElementObject
-                        key={element.id}
-                        element={element}
-                        onClick={() => { }}
+                      <SimplifiedTextElement 
+                        key={element.id} 
+                        element={element} 
+                        scale={scale} 
+                        isSelected={isElementSelectedOnCurrentSlide(element.id, slide.id)}
                       />
                     ) : (
-                      <ImageElementObject
-                        key={element.id}
-                        element={element}
-                        onClick={() => { }}
+                      <SimplifiedImageElement 
+                        key={element.id} 
+                        element={element} 
+                        scale={scale} 
+                        isSelected={isElementSelectedOnCurrentSlide(element.id, slide.id)}
                       />
                     )
                   )}
@@ -199,6 +191,6 @@ function SlidesPanel() {
       </div>
     </div>
   );
-}
+};
 
 export { SlidesPanel };

@@ -47,7 +47,7 @@ function SelectionContainer({ selectedElements, dragDelta, isDragging, onMouseDo
     backgroundColor: 'rgba(66, 133, 244, 0.1)',
     pointerEvents: onMouseDown ? 'auto' : 'none',
     cursor: onMouseDown ? (isDragging ? 'grabbing' : 'grab') : 'default',
-    zIndex: 1000,
+    zIndex: 100,
     boxSizing: 'border-box',
     opacity: isDragging ? 0.8 : 1
   };

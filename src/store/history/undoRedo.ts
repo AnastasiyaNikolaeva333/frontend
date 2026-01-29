@@ -1,4 +1,3 @@
-// store/history/undoRedo.ts
 export type ActionContext = {
   slideId: string | null;
   elementIds?: string[];
@@ -17,10 +16,10 @@ export function createUndoStack() {
   return {
     push(action: Action) {
       past.push(action);
-      future.length = 0; 
+      future.length = 0;
     },
 
-    undo(): Action['context'] | null {
+    undo(): Action["context"] | null {
       const action = past.pop();
       if (action) {
         action.undo();
@@ -30,7 +29,7 @@ export function createUndoStack() {
       return null;
     },
 
-    redo(): Action['context'] | null {
+    redo(): Action["context"] | null {
       const action = future.shift();
       if (action) {
         action.do();
@@ -52,14 +51,14 @@ export function createUndoStack() {
       past.length = 0;
       future.length = 0;
     },
-    
+
     getPastLength() {
       return past.length;
     },
-    
+
     getFutureLength() {
       return future.length;
-    }
+    },
   };
 }
 

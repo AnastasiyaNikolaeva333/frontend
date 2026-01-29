@@ -1,9 +1,10 @@
-// utils/function/useToolbarActions.ts
 import { useAppSelector, useAppDispatch } from '../../utils/hooks/redux';
 import { addSlide, removeSlides, addElement, removeElements, clearSelection, selectElements } from '../../store';
 import { selectSlide, selectSlides, selectCurrentSlideId, selectSelectedElementIds } from '../../store';
 import { createImageElement, createTextElement, createNewSlide } from '../function/functionCreateElements';
 import { useBackgroundActions } from './functionBackround';
+import { addZerroSlide } from '../../store/slice/presentationSlice';
+import { scheduleFileDeletion } from '../../store/history/undoRedoMiddleware'; 
 
 export function useToolbarActions() {
   const dispatch = useAppDispatch();
@@ -19,6 +20,7 @@ export function useToolbarActions() {
         dispatch(addSlide({ slide: newSlide, currentIndex: currentSlideId }));
         dispatch(selectSlide([newSlide.id]));
         break;
+        
       case "remove-slides":
         if (currentSlideId.length > 0) {
           const slidesBeforeRemoval = [...slides];
@@ -28,14 +30,30 @@ export function useToolbarActions() {
           
           const currentIndex = slidesBeforeRemoval.findIndex(slide => slide.id === currentSlide.id);
           
+          const slidesToRemove = slides.filter(slide => currentSlideId.includes(slide.id));
+          const imagesToDelete: string[] = [];
+          
+          slidesToRemove.forEach(slide => {
+            slide.elements.forEach(element => {
+              if (element.type === 'image' && element.src) {
+                const fileIdMatch = element.src.match(/files\/([a-zA-Z0-9]+)\/view/);
+                if (fileIdMatch && fileIdMatch[1]) {
+                  imagesToDelete.push(fileIdMatch[1]);
+                }
+              }
+            });
+          });
+          
+          if (imagesToDelete.length > 0) {
+            scheduleFileDeletion(imagesToDelete);
+          }
+          
           dispatch(removeSlides(currentSlideId));
-
           
           if (slidesBeforeRemoval.length > currentSlideId.length) {
             let newSelectedSlideId: string | null = null;
             
             if (currentIndex >= slidesBeforeRemoval.length - currentSlideId.length) {
-              
               const newIndex = Math.max(0, slidesBeforeRemoval.length - currentSlideId.length - 1);
               if (slidesBeforeRemoval[newIndex]) {
                 newSelectedSlideId = slidesBeforeRemoval[newIndex].id;
@@ -55,11 +73,11 @@ export function useToolbarActions() {
           }
           else if (slidesBeforeRemoval.length === currentSlideId.length) {
             const newSlide = createNewSlide();
-            dispatch(addSlide({ slide: newSlide, currentIndex: [] }));
-            dispatch(selectSlide([newSlide.id]));
+            dispatch(addZerroSlide({ slide: newSlide}));
           }
         }
         break;
+        
       case "add-text":
         const elementText = createTextElement();
         if (currentSlideId.length > 0) {
@@ -68,30 +86,56 @@ export function useToolbarActions() {
           dispatch(selectElements([elementText.id]));
         }
         break;
+        
       case "add-image":
         dispatch(selectSlide([currentSlideId[0]]));
         createImageElement().then((elementImage) => {
           if (currentSlideId.length > 0) {
             dispatch(addElement({ slideId: currentSlideId, element: elementImage }));
-            dispatch(selectElements([elementImage.id]))
+            dispatch(selectElements([elementImage.id]));
           }
         });
         break;
+        
       case "change-background":
         dispatch(selectSlide([currentSlideId[0]]));
         dispatch(clearSelection());
         handleChangeBackground();
         break;
+        
       case "remove-element":
         dispatch(selectSlide([currentSlideId[0]]));
         if (selectedElementIds.length > 0 && currentSlideId.length > 0) {
-          dispatch(removeElements({
-            slideId: currentSlideId,
-            elementIds: selectedElementIds
-          }));
-          dispatch(clearSelection());
+          const currentSlide = slides.find(slide => slide.id === currentSlideId[0]);
+          if (currentSlide) {
+            const elementsToRemove = currentSlide.elements.filter(element => 
+              selectedElementIds.includes(element.id)
+            );
+            
+            const imagesToDelete: string[] = [];
+            
+            elementsToRemove.forEach(element => {
+              if (element.type === 'image' && element.src) {
+                const fileIdMatch = element.src.match(/files\/([a-zA-Z0-9]+)\/view/);
+                if (fileIdMatch && fileIdMatch[1]) {
+                  imagesToDelete.push(fileIdMatch[1]);
+                }
+              }
+            });
+            
+            if (imagesToDelete.length > 0) {
+              scheduleFileDeletion(imagesToDelete);
+            }
+            
+            dispatch(removeElements({
+              slideId: currentSlideId,
+              elementIds: selectedElementIds
+            }));
+            dispatch(clearSelection());
+          }
         }
         break;
+        
       default:
         console.log("Unknown action:", action);
     }

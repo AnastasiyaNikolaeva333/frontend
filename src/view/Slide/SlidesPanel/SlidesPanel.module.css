@@ -6,11 +6,16 @@
   flex-direction: column;
 }
 
+.previewNoEvents {
+  pointer-events: none;
+  user-select: none;
+}
+
 .slidesPanelHeader {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 8px 24px;
+  padding: 8px 12px;
   gap: 5px;
   border-bottom: 1px solid #dadce0;
 }
@@ -43,10 +48,26 @@
   border: 5px solid #007acc;
 }
 
+.slideThumbnail * {
+  cursor: inherit;
+}
+
+.thumbScale {
+  cursor: inherit;
+}
+
+.slideThumbnail.active,
+.slideThumbnail.active * {
+  cursor: pointer;
+}
 .thumbnailSlide {
   width: 960px;
   height: 477px;
   border: 1px solid #ccc;
   background-color: white;
   pointer-events: none;
+}
+
+.slideThumbnail * {
+  cursor: pointer;
 }

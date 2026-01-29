@@ -2,13 +2,14 @@
   display: flex;
   gap: 2px;
   justify-content: center;
+  align-items: center;
   background: #fff;
   border-radius: 4px;
   color: #202124;
   cursor: pointer;
   font-size: 18px;
   padding: 4px 6px;
-  flex-grow: 1;
+  flex: 1;
 }
 
 .myButton:hover {

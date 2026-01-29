@@ -15,7 +15,7 @@ const renderSlideBackground = (background: {
       };
     case "gradient": {
       const gradientColors = background.colors?.map((color) => color.color).join(", ") || "";
-      return { background: `linear-gradient(${gradientColors})` };
+      return { background: `linear-gradient(135deg, ${gradientColors})` };
     }
     default:
       return { backgroundColor: "#ffffff" };

@@ -1,0 +1,77 @@
+.errorContainer {
+  padding: 16px;
+  color: crimson;
+}
+
+
+.logoutContainer {
+  position: fixed;
+  margin: 5px;
+  right: 10px;
+  top: 10px;
+  z-index: 9999;
+}
+
+.logoutButton {
+  background-color: white;
+  padding: 12px 24px;
+  font-size: 18px;
+  height: auto;
+  min-height: 40px;
+}
+
+.errorBanner {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 10000;
+  background: mistyrose;
+  border: 1px solid crimson;
+  padding: 10px 12px;
+  border-radius: 8px;
+  max-width: 420px;
+}
+
+.errorTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.errorMessage {
+  margin-bottom: 8px;
+}
+
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 90vh;
+  padding: 20px;
+  gap: 20px;
+  text-align: center;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+.offlineContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 20px;
+  background-color: #f8f9fa;
+  overflow-y: none;
+}
+
+.retryButton {
+  margin-top: 20px;
+}
+
+.logoutContainer {
+  position: fixed;
+  right: 20px;
+  z-index: 1000;
+}

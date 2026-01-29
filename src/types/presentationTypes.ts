@@ -87,4 +87,5 @@ export type {
   ImageElement,
   Picture,
   Gradient,
+  FontStyle,
 };

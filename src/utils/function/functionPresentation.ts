@@ -7,11 +7,7 @@ function createSelected(): Selected {
   };
 }
 
-function saveTitle() {
-  console.log("Сохранение презентации");
-}
 
 export {
   createSelected,
-  saveTitle,
 }

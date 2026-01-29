@@ -1,14 +1,9 @@
 import styles from "./headPresentation.module.css";
-import { MyButton } from "../Button/Buttons";
 import { useAppSelector, useAppDispatch } from '../../utils/hooks/redux';
 import { changePresentationTitle, selectPresentationTitle } from "../../store";
 import { useEffect, useState } from "react";
 
-type HeaderPresentationProps = {
-  onSave: () => void;
-};
-
-function HeaderPresentation(props: HeaderPresentationProps) {
+function HeaderPresentation() {
   const dispatch = useAppDispatch();
   const title = useAppSelector(selectPresentationTitle);
   
@@ -47,11 +42,6 @@ function HeaderPresentation(props: HeaderPresentationProps) {
           onKeyDown={handleKeyPress}
           placeholder="Название презентации"
         />
-      </div>
-      <div>
-        <MyButton onClick={props.onSave}>
-          <img className={styles.logoIcon} src="src/assets/savePresentation.png" alt="Сохранить" />
-        </MyButton>
       </div>
     </header>
   );

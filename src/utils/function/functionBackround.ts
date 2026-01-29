@@ -1,35 +1,60 @@
 import type { Color, Background } from "../../types/presentationTypes";
 import { useAppDispatch, useAppSelector } from '../../utils/hooks/redux';
-import { updateSlideBackground } from '../../store/slice/slidesSlice';
+import { updateSlideBackground } from "../../store"; 
 import { selectCurrentSlideId } from '../../store';
 import { createImageElement } from './functionCreateElements'; 
 
-function showColorPicker(dispatch: any, slideId: string[]) {
-    if (!slideId) return;
-    
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.value = '#ffffff';
-    colorInput.style.cssText = `opacity: 0;`;
+function showColorPicker(currentColor: string = '#ffffff'): Promise<string | null> {
+    return new Promise((resolve) => {
+        const container = document.createElement('div');
+        container.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
 
-    colorInput.onchange = (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target.value) {
-            const background: Background = { 
-                type: "color", 
-                color: target.value 
-            };
-            dispatch(updateSlideBackground({ slideId, background }));
-        }
-        document.body.removeChild(colorInput);
-    };
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = currentColor;
+        colorInput.style.cssText = `
+            width: 100px;
+            height: 100px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            opacity: 1;
+            visibility: visible;
+            position: relative;
+            z-index: 10001;
+        `;
 
-    colorInput.onblur = () => {
-        document.body.removeChild(colorInput);
-    };
+        colorInput.onchange = (e) => {
+            const target = e.target as HTMLInputElement;
+            if (target.value) {
+                resolve(target.value);
+            }
+            document.body.removeChild(container);
+        };
 
-    document.body.appendChild(colorInput);
-    colorInput.click();
+        colorInput.onblur = () => {
+            resolve(null);
+            document.body.removeChild(container);
+        };
+
+        container.appendChild(colorInput);
+        document.body.appendChild(container);
+        
+        requestAnimationFrame(() => {
+            colorInput.focus();
+            colorInput.click();
+        });
+    });
 }
 
 function showGradientPicker(dispatch: any, slideId: string[]) {
@@ -46,6 +71,7 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
         display: flex;
         justify-content: center;
         align-items: center;
+        z-index: 9999;
     `;
 
     const content = document.createElement('div');
@@ -57,21 +83,20 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
         flex-direction: column;
         gap: 10px;
         min-width: 300px;
+        z-index: 10000;
     `;
 
     const colors: string[] = ['#ffffff', '#ffffff'];
-    let colorElements: HTMLElement[] = [];
 
-    const updatePreview = () => {
+    const updatePreview = (previewElement: HTMLElement) => {
         const gradientValue = colors.length > 1
-            ? `linear-gradient(90deg, ${colors.join(', ')})`
+            ? `linear-gradient(135deg, ${colors.join(', ')})`
             : colors[0];
-        preview.style.background = gradientValue;
+        previewElement.style.background = gradientValue;
     };
 
-    const renderColorList = () => {
-        colorList.innerHTML = '';
-        colorElements = [];
+    const renderColorList = (container: HTMLElement, previewElement: HTMLElement) => {
+        container.innerHTML = '';
 
         colors.forEach((color, index) => {
             const colorItem = document.createElement('div');
@@ -111,12 +136,12 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
             `;
 
             colorPreview.onclick = () => {
-                showSingleColorPicker(color).then(newColor => {
+                showColorPicker(color).then(newColor => {
                     if (newColor) {
                         colors[index] = newColor;
                         colorPreview.style.background = newColor;
                         colorText.textContent = newColor;
-                        updatePreview();
+                        updatePreview(previewElement);
                     }
                 });
             };
@@ -124,8 +149,8 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
             removeBtn.onclick = () => {
                 if (colors.length > 2) {
                     colors.splice(index, 1);
-                    renderColorList();
-                    updatePreview();
+                    renderColorList(container, previewElement);
+                    updatePreview(previewElement);
                 } else {
                     alert('Градиент должен содержать минимум 2 цвета');
                 }
@@ -134,8 +159,7 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
             colorItem.appendChild(colorPreview);
             colorItem.appendChild(colorText);
             colorItem.appendChild(removeBtn);
-            colorList.appendChild(colorItem);
-            colorElements.push(colorItem);
+            container.appendChild(colorItem);
         });
     };
 
@@ -144,13 +168,13 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
         <div style="margin-bottom: 10px;">
             <div id="gradient-preview" style="height: 50px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;"></div>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button id="add-color">+ Добавить цвет</button>
+                <button id="add-color" style="padding: 5px 10px; cursor: pointer;">+ Добавить цвет</button>
             </div>
         </div>
         <div id="color-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
         <div style="display: flex; gap: 10px;">
-            <button id="apply-gradient" style="flex: 1; background: #4CAF50; color: white;">Применить</button>
-            <button id="cancel-gradient" style="flex: 1; background: #f44336; color: white;">Отмена</button>
+            <button id="apply-gradient" style="flex: 1; background: #4CAF50; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer;">Применить</button>
+            <button id="cancel-gradient" style="flex: 1; background: #f44336; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
         </div>
     `;
 
@@ -163,14 +187,14 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
     const applyBtn = document.getElementById('apply-gradient')!;
     const cancelBtn = document.getElementById('cancel-gradient')!;
 
-    renderColorList();
-    updatePreview();
+    renderColorList(colorList, preview);
+    updatePreview(preview);
 
     addColorBtn.onclick = () => {
         const newColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
         colors.push(newColor);
-        renderColorList();
-        updatePreview();
+        renderColorList(colorList, preview);
+        updatePreview(preview);
     };
 
     applyBtn.onclick = () => {
@@ -198,29 +222,6 @@ function showGradientPicker(dispatch: any, slideId: string[]) {
     };
 }
 
-function showSingleColorPicker(currentColor: string = '#ffffff'): Promise<string | null> {
-    return new Promise((resolve) => {
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.value = currentColor;
-        colorInput.style.cssText = `opacity: 0;`;
-
-        colorInput.onchange = (e) => {
-            const target = e.target as HTMLInputElement;
-            resolve(target.value);
-            document.body.removeChild(colorInput);
-        };
-
-        colorInput.onblur = () => {
-            resolve(null);
-            document.body.removeChild(colorInput);
-        };
-
-        document.body.appendChild(colorInput);
-        colorInput.click();
-    });
-}
-
 export function useBackgroundActions() {
   const dispatch = useAppDispatch();
   const currentSlideId = useAppSelector(selectCurrentSlideId);
@@ -237,6 +238,7 @@ export function useBackgroundActions() {
         display: flex;
         justify-content: center;
         align-items: center;
+        z-index: 9999;
     `;
 
     const content = document.createElement('div');
@@ -248,14 +250,15 @@ export function useBackgroundActions() {
         flex-direction: column;
         gap: 10px;
         min-width: 200px;
+        z-index: 10000;
     `;
 
     content.innerHTML = `
-        <h3 style="margin: 0 0 10px 0;">Выберите тип фона</h3>
-        <button id="color-btn">Сплошной цвет</button>
-        <button id="gradient-btn">Градиент</button>
-        <button id="image-btn">Изображение</button>
-        <button id="cancel-btn">Отмена</button>
+        <h3 style="margin: 0 0 10px 0; text-align: center;">Выберите тип фона</h3>
+        <button id="color-btn" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #5fa8e7;">Сплошной цвет</button>
+        <button id="gradient-btn" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #5fa8e7">Градиент</button>
+        <button id="image-btn" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #5fa8e7">Изображение</button>
+        <button id="cancel-btn" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #ec7171;">Отмена</button>
     `;
 
     modal.appendChild(content);
@@ -263,7 +266,15 @@ export function useBackgroundActions() {
 
     document.getElementById('color-btn')!.onclick = () => {
         document.body.removeChild(modal);
-        showColorPicker(dispatch, currentSlideId);
+        showColorPicker().then(color => {
+            if (color && currentSlideId) {
+                const background: Background = { 
+                    type: "color", 
+                    color: color 
+                };
+                dispatch(updateSlideBackground({ slideId: currentSlideId, background }));
+            }
+        });
     };
 
     document.getElementById('gradient-btn')!.onclick = () => {
